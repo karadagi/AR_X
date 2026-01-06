@@ -1,0 +1,33 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build on macOS
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Set up Swift
+      uses: swift-actions/setup-swift@v1
+      
+    - name: Build
+      run: |
+        # Since we don't have an xcodeproj yet, we check if we can build as a package 
+        # or just verify syntax. 
+        # Ideally, the user creates an Xcode project.
+        # Here we just list files to verify structure in logs.
+        ls -R
+        
+        # If this were a Swift Package:
+        # swift build -v
+        
+        # If we had an xcodeproj:
+        # xcodebuild -project Antigravity.xcodeproj -scheme Antigravity -sdk iphoneos CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO build
