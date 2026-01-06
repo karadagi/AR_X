@@ -16,7 +16,7 @@ struct ContentView: View {
                                 Button(action: {
                                     showAR = false
                                 }) {
-                                    Image(systemName: "xmark.circle.fill")
+                                    Image(systemName: "arrow.left.circle.fill")
                                         .font(.largeTitle)
                                         .foregroundColor(.white)
                                         .padding()
@@ -26,8 +26,12 @@ struct ContentView: View {
                             Spacer()
                         }
                     )
+                    .transition(.opacity)
+            } else if let url = selectedFileURL {
+                ModelPreviewView(fileURL: url, showAR: $showAR)
+                    .transition(.move(edge: .bottom))
             } else {
-                HomeView(selectedFileURL: $selectedFileURL, showAR: $showAR)
+                HomeView(selectedFileURL: $selectedFileURL, showAR: .constant(false)) // Update binding logic
             }
         }
     }

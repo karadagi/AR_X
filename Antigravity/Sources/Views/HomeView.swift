@@ -3,7 +3,8 @@ import UniformTypeIdentifiers
 
 struct HomeView: View {
     @Binding var selectedFileURL: URL?
-    @Binding var showAR: Bool
+    // showAR removed, we just set fileURL to trigger preview
+    @Binding var showAR: Bool // Kept for compatibility if needed, or unused.
     @State private var isImporting: Bool = false
     
     var body: some View {
@@ -40,6 +41,11 @@ struct HomeView: View {
             }
             
             Spacer()
+            
+            Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")")
+                .font(.footnote)
+                .foregroundColor(.gray)
+                .padding(.bottom, 10)
         }
         .padding()
         .background(Color(UIColor.systemGroupedBackground))
@@ -73,7 +79,7 @@ struct DocumentPicker: UIViewControllerRepresentable {
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
             if let url = urls.first {
                 parent.selectedFileURL = url
-                parent.showAR = true
+                // parent.showAR = true // Don't jump to AR, let ContentView show Preview
             }
         }
     }
