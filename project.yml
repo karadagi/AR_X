@@ -1,0 +1,23 @@
+name: Antigravity
+options:
+  bundleIdPrefix: com.antigravity.ar
+  deploymentTarget:
+    iOS: 16.0
+targets:
+  Antigravity:
+    type: application
+    platform: iOS
+    sources:
+      - path: Antigravity/Sources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.antigravity.ar.Antigravity
+        INFOPLIST_FILE: Antigravity/Sources/Info.plist
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
+        TARGETED_DEVICE_FAMILY: "1,2" # iPhone, iPad
+        ENABLE_PREVIEWS: YES
+        DEVELOPMENT_TEAM: "" # Leave empty for unsigned/auto
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: ""
+        PROVISIONING_PROFILE_SPECIFIER: ""

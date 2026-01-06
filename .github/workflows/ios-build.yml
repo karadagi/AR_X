@@ -3,12 +3,11 @@ name: Build iOS App
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Build on macOS
+    name: Build IPA
     runs-on: macos-latest
     
     steps:
@@ -18,16 +17,36 @@ jobs:
     - name: Set up Swift
       uses: swift-actions/setup-swift@v1
       
-    - name: Build
+    - name: Install XcodeGen
+      run: brew install xcodegen
+      
+    - name: Generate Xcode Project
+      run: xcodegen generate
+      
+    - name: List Files
+      run: ls -R
+      
+    - name: Build Archive
       run: |
-        # Since we don't have an xcodeproj yet, we check if we can build as a package 
-        # or just verify syntax. 
-        # Ideally, the user creates an Xcode project.
-        # Here we just list files to verify structure in logs.
-        ls -R
+        xcodebuild archive \
+          -project Antigravity.xcodeproj \
+          -scheme Antigravity \
+          -destination "generic/platform=iOS" \
+          -archivePath Antigravity.xcarchive \
+          -sdk iphoneos \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+
+    - name: Export IPA (Unsigned)
+      run: |
+        # Manually create IPA structure since we can't use -exportArchive without signing
+        mkdir -p Payload
+        cp -r Antigravity.xcarchive/Products/Applications/Antigravity.app Payload/
+        zip -r Antigravity-Unsigned.ipa Payload
         
-        # If this were a Swift Package:
-        # swift build -v
-        
-        # If we had an xcodeproj:
-        # xcodebuild -project Antigravity.xcodeproj -scheme Antigravity -sdk iphoneos CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO build
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Antigravity-IPA
+        path: Antigravity-Unsigned.ipa
