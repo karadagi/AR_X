@@ -21,3 +21,10 @@ targets:
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: ""
         PROVISIONING_PROFILE_SPECIFIER: ""
+    info:
+      path: Antigravity/Sources/Info.plist
+      properties:
+        NSCameraUsageDescription: "We need access to the camera to display your 3D models in the real world."
+        UISupportsDocumentBrowser: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UIFileSharingEnabled: true
