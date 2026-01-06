@@ -5,6 +5,9 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build IPA
@@ -68,6 +71,5 @@ jobs:
         draft: false
         prerelease: true
         files: Antigravity-Unsigned.ipa
-        overwrite: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
