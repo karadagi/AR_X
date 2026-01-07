@@ -52,12 +52,22 @@ struct ARViewContainer: UIViewRepresentable {
                     let material = SimpleMaterial(color: .white, isMetallic: false)
                     let modelEntity = ModelEntity(mesh: mesh, materials: [material])
                     
-                    // Add bounding box visual
+                    // Normalize Scale to ~0.5m
                     let bounds = modelEntity.visualBounds(relativeTo: nil)
-                    let boxEntity = GeometryUtils.createBoundingBoxEntity(bounds: bounds)
-                    modelEntity.addChild(boxEntity)
+                    let maxDimension = max(bounds.extents.x, max(bounds.extents.y, bounds.extents.z))
                     
-                    // Generate collision shape for raycasting/manipulation
+                    // If invalid bounds (0), default to 1
+                    let size = maxDimension > 0 ? maxDimension : 1.0
+                    
+                    // Target size = 0.5 meters
+                    let scaleFactor = 0.5 / size
+                    modelEntity.scale = SIMD3<Float>(repeating: scaleFactor)
+                    
+                    // Also fix orientation (rotate -90 x like in preview)
+                    // RealityKit coordinate system is Y-up, STL is Z-up usually.
+                    modelEntity.orientation = simd_quatf(angle: -Float.pi/2, axis: SIMD3<Float>(1, 0, 0))
+                    
+                    // Collision for raycasting
                     modelEntity.generateCollisionShapes(recursive: true)
                     
                     self.loadedModelEntity = modelEntity
@@ -66,30 +76,45 @@ struct ARViewContainer: UIViewRepresentable {
         }
         
         @objc func handleTap(_ sender: UITapGestureRecognizer) {
-            guard let arView = arView, let model = loadedModelEntity else { return }
-            
+            guard let arView = arView else { return }
             let tapLocation = sender.location(in: arView)
             
-            // Raycast for horizontal planes
+            // Haptic Feedback
+            let impactLight = UIImpactFeedbackGenerator(style: .light)
+            impactLight.impactOccurred()
+            
             let results = arView.raycast(from: tapLocation, allowing: .estimatedPlane, alignment: .horizontal)
             
             if let firstResult = results.first {
-                // Determine position
                 let position = simd_make_float3(firstResult.worldTransform.columns.3)
                 
-                placeAnchor(at: position, model: model, in: arView)
+                if let model = loadedModelEntity {
+                    placeAnchor(at: position, model: model, in: arView)
+                } else {
+                    // Fallback: Place a red debug box if model failed to load
+                    // This confirms the "Tap" works even if the model is broken
+                    let mesh = MeshResource.generateBox(size: 0.1)
+                    let mat = SimpleMaterial(color: .red, isMetallic: false)
+                    let debugEntity = ModelEntity(mesh: mesh, materials: [mat])
+                    placeAnchor(at: position, model: debugEntity, in: arView)
+                }
             }
         }
         
         func placeAnchor(at position: SIMD3<Float>, model: ModelEntity, in arView: ARView) {
-            // Clone the model so valid one can be placed multiple times if desired
             let modelClone = model.clone(recursive: true)
+            // Reset position of the clone relative to anchor
+            modelClone.position = .zero
             
-            // Create anchor
             let anchor = AnchorEntity(world: position)
             anchor.addChild(modelClone)
             
             arView.scene.anchors.append(anchor)
+            
+            // Add bounding box entity as child *after* scaling so we see true bounds
+            let bounds = modelClone.visualBounds(relativeTo: nil)
+            let boxEntity = GeometryUtils.createBoundingBoxEntity(bounds: bounds)
+            modelClone.addChild(boxEntity)
         }
     }
 }

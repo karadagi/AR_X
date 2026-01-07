@@ -9,13 +9,17 @@ struct ModelPreviewView: View {
     
     @State private var scene: SCNScene?
     @State private var isLoading = true
+    @State private var lightIntensity: Float = 1000
+    @State private var isShadowsEnabled: Bool = true
+    @State private var showSettings: Bool = false
+    @State private var lightNode: SCNNode?
     
     var body: some View {
         ZStack {
-            Color.white.edgesIgnoringSafeArea(.all) // Changed background to white for better contrast with black button, or handle black on light
+            Color.white.edgesIgnoringSafeArea(.all)
             
             if let scene = scene {
-                SceneView(scene: scene, pointOfView: nil, options: [.allowsCameraControl, .autoenablesDefaultLighting])
+                SceneView(scene: scene, pointOfView: nil, options: [.allowsCameraControl])
                     .edgesIgnoringSafeArea(.all)
                     .background(Color.white)
             }
@@ -26,22 +30,80 @@ struct ModelPreviewView: View {
                     .foregroundColor(.black)
             }
             
+            // Settings Overlay
+            if showSettings {
+                Color.black.opacity(0.3)
+                    .edgesIgnoringSafeArea(.all)
+                    .onTapGesture {
+                        showSettings = false
+                    }
+                
+                VStack(spacing: 20) {
+                    Text("Settings")
+                        .font(.headline)
+                        .foregroundColor(.black)
+                    
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Light Intensity")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        Slider(value: Binding(
+                            get: { lightIntensity },
+                            set: { newValue in
+                                lightIntensity = newValue
+                                lightNode?.light?.intensity = CGFloat(newValue)
+                            }
+                        ), in: 0...4000)
+                        .accentColor(.black)
+                        
+                        Divider()
+                        
+                        Toggle("Shadows", isOn: Binding(
+                            get: { isShadowsEnabled },
+                            set: { newValue in
+                                isShadowsEnabled = newValue
+                                lightNode?.light?.castsShadow = newValue
+                            }
+                        ))
+                        .toggleStyle(SwitchToggleStyle(tint: .black))
+                        .foregroundColor(.black)
+                    }
+                }
+                .padding()
+                .frame(width: 300)
+                .background(Color.white)
+                .cornerRadius(20)
+                .shadow(radius: 10)
+                .transition(.scale)
+            }
+            
             VStack {
                 HStack {
                     Button(action: {
-                        // Close preview by clearing selection
                         selectedFileURL = nil
                         showAR = false
                     }) {
-                        Image(systemName: "arrow.left.circle.fill") // Use arrow for "Back"
+                        Image(systemName: "arrow.left.circle.fill")
                             .font(.largeTitle)
-                            .foregroundColor(.black) // Requested BLACK color
+                            .foregroundColor(.black)
                             .padding()
                     }
                     Spacer()
+                    
+                    Button(action: {
+                        withAnimation {
+                            showSettings.toggle()
+                        }
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.largeTitle)
+                            .foregroundColor(.black)
+                            .padding()
+                    }
                 }
                 Spacer()
                 
+                // Button is always visible
                 Button(action: {
                     showAR = true
                 }) {
@@ -71,21 +133,39 @@ struct ModelPreviewView: View {
             }
             
             let asset = MDLAsset(url: fileURL)
-            // Fix Up-Axis: Z-up (standard STL) to Y-up (SceneKit)
-            // Rotating the root object -90 degrees around X axis often solves this.
-            
             let scnScene = SCNScene(mdlAsset: asset)
             
-            // Apply rotation to root node
+            // Fix Up-Axis
             let wrapperNode = SCNNode()
             for child in scnScene.rootNode.childNodes {
                 wrapperNode.addChildNode(child)
             }
             wrapperNode.eulerAngles.x = -Float.pi / 2
             scnScene.rootNode.addChildNode(wrapperNode)
+            
+            // Add Custom Light
+            let light = SCNLight()
+            light.type = .directional
+            light.intensity = CGFloat(self.lightIntensity)
+            light.castsShadow = true
+            
+            let lightNode = SCNNode()
+            lightNode.light = light
+            lightNode.position = SCNVector3(10, 10, 10)
+            lightNode.look(at: SCNVector3(0, 0, 0))
+            scnScene.rootNode.addChildNode(lightNode)
+            
+            // Add Ambient Light
+            let ambient = SCNLight()
+            ambient.type = .ambient
+            ambient.intensity = 300
+            let ambientNode = SCNNode()
+            ambientNode.light = ambient
+            scnScene.rootNode.addChildNode(ambientNode)
 
             DispatchQueue.main.async {
                 self.scene = scnScene
+                self.lightNode = lightNode
                 self.isLoading = false
             }
         }
