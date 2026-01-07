@@ -13,8 +13,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.antigravity.ar.Antigravity
         INFOPLIST_FILE: Antigravity/Sources/Info.plist
-        MARKETING_VERSION: 1.0.2
-        CURRENT_PROJECT_VERSION: 3
+        MARKETING_VERSION: 1.0.3
+        CURRENT_PROJECT_VERSION: 4
         TARGETED_DEVICE_FAMILY: "1,2" # iPhone, iPad
         ENABLE_PREVIEWS: YES
         DEVELOPMENT_TEAM: "" # Leave empty for unsigned/auto
@@ -29,3 +29,5 @@ targets:
         UISupportsDocumentBrowser: true
         LSSupportsOpeningDocumentsInPlace: true
         UIFileSharingEnabled: true
+        CFBundleShortVersionString: "1.0.3"
+        CFBundleVersion: "4"
