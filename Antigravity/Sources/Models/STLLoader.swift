@@ -65,7 +65,7 @@ class STLLoader {
             for submesh in submeshes {
                 let indexBuffer = submesh.indexBuffer
                 let indexCount = submesh.indexCount
-                let map = indexBuffer.map
+                let map = indexBuffer.map() // function call
                 let ptr = map.bytes
                 
                 switch submesh.indexType {

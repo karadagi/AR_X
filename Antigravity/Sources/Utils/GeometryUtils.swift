@@ -12,7 +12,7 @@ class GeometryUtils {
         let depth = bounds.max.z - bounds.min.z
         
         let mesh = MeshResource.generateBox(size: SIMD3<Float>(width, height, depth))
-        var material = SimpleMaterial(color: .blue.withAlphaComponent(0.3), isMetallic: false)
+        let material = SimpleMaterial(color: .blue.withAlphaComponent(0.3), isMetallic: false)
         
         let entity = ModelEntity(mesh: mesh, materials: [material])
         return entity
