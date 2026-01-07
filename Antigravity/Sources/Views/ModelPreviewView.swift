@@ -148,6 +148,8 @@ struct ModelPreviewView: View {
             light.type = .directional
             light.intensity = CGFloat(self.lightIntensity)
             light.castsShadow = true
+            light.automaticallyAdjustsShadowProjection = true // Auto-fit shadow map
+            light.shadowSampleCount = 4 // Softer edges
             
             let lightNode = SCNNode()
             lightNode.light = light

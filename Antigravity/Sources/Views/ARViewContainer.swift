@@ -52,22 +52,29 @@ struct ARViewContainer: UIViewRepresentable {
                     let material = SimpleMaterial(color: .white, isMetallic: false)
                     let modelEntity = ModelEntity(mesh: mesh, materials: [material])
                     
-                    // Normalize Scale to ~0.5m
-                    let bounds = modelEntity.visualBounds(relativeTo: nil)
-                    let maxDimension = max(bounds.extents.x, max(bounds.extents.y, bounds.extents.z))
+                    // Smart Scaling Logic
+                    // STLLoader returns unitless data.
+                    // If bounding box largest dimension > 10.0, assume it's in Millimeters (mm).
+                    // Convert mm to meters: multiply by 0.001.
                     
-                    // If invalid bounds (0), default to 1
-                    let size = maxDimension > 0 ? maxDimension : 1.0
+                    let originalBounds = modelEntity.visualBounds(relativeTo: nil)
+                    let originalSize = max(originalBounds.extents.x, max(originalBounds.extents.y, originalBounds.extents.z))
                     
-                    // Target size = 0.5 meters
-                    let scaleFactor = 0.5 / size
-                    modelEntity.scale = SIMD3<Float>(repeating: scaleFactor)
+                    if originalSize > 10.0 {
+                        // Likely mm, convert to meters
+                        let mmScale: Float = 0.001
+                        modelEntity.scale = SIMD3<Float>(repeating: mmScale)
+                    } else if originalSize > 2.0 {
+                        // Between 2m and 10m? That's huge for a tabletop AR app. Scale to fit 1m.
+                        let scale = 1.0 / originalSize
+                        modelEntity.scale = SIMD3<Float>(repeating: scale)
+                    }
+                    // Else: If it's < 2.0 (e.g. 0.5 or 0.1), assume it's already in meters. Keep as is.
                     
-                    // Also fix orientation (rotate -90 x like in preview)
-                    // RealityKit coordinate system is Y-up, STL is Z-up usually.
+                    // Fix Layout (Up Axis)
                     modelEntity.orientation = simd_quatf(angle: -Float.pi/2, axis: SIMD3<Float>(1, 0, 0))
                     
-                    // Collision for raycasting
+                    // Add collision for interaction
                     modelEntity.generateCollisionShapes(recursive: true)
                     
                     self.loadedModelEntity = modelEntity

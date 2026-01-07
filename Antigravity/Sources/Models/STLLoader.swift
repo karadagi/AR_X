@@ -32,14 +32,16 @@ class STLLoader {
         // 1. Extract Positions
         if let posAttr = mdlObject.vertexAttributeData(forAttributeNamed: MDLVertexAttributePosition, as: .float3) {
             let vertexCount = mdlObject.vertexCount
-            let map = posAttr.map
-            let bytes = map.bytes.bindMemory(to: SIMD3<Float>.self, capacity: vertexCount)
+            let stride = posAttr.stride
+            let ptr = posAttr.map.bytes
             
             var positions = [SIMD3<Float>]()
             positions.reserveCapacity(vertexCount)
             
             for i in 0..<vertexCount {
-                positions.append(bytes[i])
+                let offset = i * stride
+                let pos = ptr.load(fromByteOffset: offset, as: SIMD3<Float>.self)
+                positions.append(pos)
             }
             descriptor.positions = MeshBuffer(positions)
         }
@@ -47,14 +49,16 @@ class STLLoader {
         // 2. Extract Normals
         if let normAttr = mdlObject.vertexAttributeData(forAttributeNamed: MDLVertexAttributeNormal, as: .float3) {
             let vertexCount = mdlObject.vertexCount
-            let map = normAttr.map
-            let bytes = map.bytes.bindMemory(to: SIMD3<Float>.self, capacity: vertexCount)
+            let stride = normAttr.stride
+            let ptr = normAttr.map.bytes
             
             var normals = [SIMD3<Float>]()
             normals.reserveCapacity(vertexCount)
             
             for i in 0..<vertexCount {
-                normals.append(bytes[i])
+                let offset = i * stride
+                let normal = ptr.load(fromByteOffset: offset, as: SIMD3<Float>.self)
+                normals.append(normal)
             }
             descriptor.normals = MeshBuffer(normals)
         }
