@@ -24,11 +24,19 @@ struct ContentView: View {
                                 Spacer()
                             }
                             Spacer()
+                            
+                            Text("Tap on floor to place model")
+                                .font(.headline)
+                                .padding()
+                                .background(Color.black.opacity(0.6))
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                                .padding(.bottom, 50)
                         }
                     )
                     .transition(.opacity)
             } else if let url = selectedFileURL {
-                ModelPreviewView(fileURL: url, showAR: $showAR)
+                ModelPreviewView(fileURL: url, selectedFileURL: $selectedFileURL, showAR: $showAR)
                     .transition(.move(edge: .bottom))
             } else {
                 HomeView(selectedFileURL: $selectedFileURL, showAR: .constant(false)) // Update binding logic

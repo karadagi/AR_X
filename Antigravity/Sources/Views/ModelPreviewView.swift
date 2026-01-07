@@ -4,36 +4,38 @@ import SceneKit.ModelIO
 
 struct ModelPreviewView: View {
     let fileURL: URL
+    @Binding var selectedFileURL: URL? // Add binding to clear selection
     @Binding var showAR: Bool
-    @Environment(\.presentationMode) var presentationMode
     
     @State private var scene: SCNScene?
     @State private var isLoading = true
     
     var body: some View {
         ZStack {
-            Color.black.edgesIgnoringSafeArea(.all)
+            Color.white.edgesIgnoringSafeArea(.all) // Changed background to white for better contrast with black button, or handle black on light
             
             if let scene = scene {
                 SceneView(scene: scene, pointOfView: nil, options: [.allowsCameraControl, .autoenablesDefaultLighting])
                     .edgesIgnoringSafeArea(.all)
+                    .background(Color.white)
             }
             
             if isLoading {
                 ProgressView("Loading 3D Model...")
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    .foregroundColor(.white)
+                    .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                    .foregroundColor(.black)
             }
             
             VStack {
                 HStack {
                     Button(action: {
-                        // Close preview, go back to home
-                        presentationMode.wrappedValue.dismiss()
+                        // Close preview by clearing selection
+                        selectedFileURL = nil
+                        showAR = false
                     }) {
-                        Image(systemName: "xmark.circle.fill")
+                        Image(systemName: "arrow.left.circle.fill") // Use arrow for "Back"
                             .font(.largeTitle)
-                            .foregroundColor(.white)
+                            .foregroundColor(.black) // Requested BLACK color
                             .padding()
                     }
                     Spacer()
@@ -45,10 +47,10 @@ struct ModelPreviewView: View {
                 }) {
                     Text("View in AR")
                         .font(.headline)
-                        .foregroundColor(.black)
+                        .foregroundColor(.white)
                         .padding()
                         .frame(width: 200)
-                        .background(Color.white)
+                        .background(Color.black)
                         .cornerRadius(30)
                 }
                 .padding(.bottom, 40)
@@ -61,8 +63,6 @@ struct ModelPreviewView: View {
     
     func loadModel() {
         DispatchQueue.global(qos: .userInitiated).async {
-            // Secure access is handled by the parent or we need to start it here again 
-            // if it was stopped. It's safer to start it.
             let accessing = fileURL.startAccessingSecurityScopedResource()
             defer {
                 if accessing {
@@ -71,11 +71,19 @@ struct ModelPreviewView: View {
             }
             
             let asset = MDLAsset(url: fileURL)
+            // Fix Up-Axis: Z-up (standard STL) to Y-up (SceneKit)
+            // Rotating the root object -90 degrees around X axis often solves this.
+            
             let scnScene = SCNScene(mdlAsset: asset)
             
-            // Auto-scale to fit view if needed, but SceneKit allows zooming.
-            // Let's ensure it has a camera or rely on default light/camera.
-            
+            // Apply rotation to root node
+            let wrapperNode = SCNNode()
+            for child in scnScene.rootNode.childNodes {
+                wrapperNode.addChildNode(child)
+            }
+            wrapperNode.eulerAngles.x = -Float.pi / 2
+            scnScene.rootNode.addChildNode(wrapperNode)
+
             DispatchQueue.main.async {
                 self.scene = scnScene
                 self.isLoading = false
