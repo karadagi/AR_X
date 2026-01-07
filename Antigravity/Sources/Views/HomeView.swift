@@ -11,7 +11,7 @@ struct HomeView: View {
         VStack(spacing: 40) {
             Spacer()
             
-            Text("Antigravity")
+            Text("AR_X")
                 .font(.system(size: 40, weight: .bold, design: .rounded))
             
             Text("Visualize your STL models in AR")
