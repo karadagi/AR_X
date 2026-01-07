@@ -49,7 +49,7 @@ class STLLoader {
                      ptr.copyMemory(from: UnsafeRawBufferPointer(start: posAttr.map.bytes, count: bytesToCopy))
                  }
              }
-             descriptor.positions = MeshBuffers.Positions(positions)
+             descriptor.positions = MeshBuffer(positions)
         }
         
         // 2. Extract Normals
@@ -63,7 +63,7 @@ class STLLoader {
                      ptr.copyMemory(from: UnsafeRawBufferPointer(start: normAttr.map.bytes, count: bytesToCopy))
                  }
              }
-             descriptor.normals = MeshBuffers.Normals(normals)
+             descriptor.normals = MeshBuffer(normals)
         }
         
         // 3. Extract Indices (Primitives)
