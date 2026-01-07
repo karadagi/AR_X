@@ -25,7 +25,7 @@ jobs:
       
     - name: Generate App Icons
       run: |
-        cd AR_X/Antigravity/Sources/Assets.xcassets/AppIcon.appiconset
+        cd Antigravity/Sources/Assets.xcassets/AppIcon.appiconset
         
         # Source is icon-master.png
         # Generate all sizes
@@ -47,9 +47,7 @@ jobs:
         ls -la
         
     - name: Generate Xcode Project
-      run: |
-        cd AR_X
-        xcodegen generate
+      run: xcodegen generate
       
     - name: List Files
       run: ls -R
